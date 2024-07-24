@@ -163,11 +163,17 @@ class ChatInterface(QWidget):
         chunks_per_question = 2
         selected_chunks = random.sample(self.all_chunks, min(num_questions * chunks_per_question, len(self.all_chunks)))
 
+        # Define prompt template for question generation
         prompt_template = """Crea una domanda d'esame a scelta multipla basata sulle seguenti informazioni. 
         La domanda deve avere 4 possibili risposte, di cui solo una è corretta.
 
         Informazioni:
         {context}
+
+        Istruzioni:
+        1. Non creare domande sugli autori dei documenti o su chi ha scritto il testo.
+        2. Concentrati sul contenuto e sui concetti presenti nelle informazioni fornite.
+        3. Evita domande su dettagli bibliografici o editoriali.
 
         Formato della risposta:
         [Domanda]
@@ -184,6 +190,7 @@ class ChatInterface(QWidget):
         PROMPT = PromptTemplate(template=prompt_template, input_variables=["context"])
         llm_chain = LLMChain(llm=self.llm, prompt=PROMPT)
 
+        # Generate questions
         self.exam_questions = []
         for i in range(0, len(selected_chunks), chunks_per_question):
             chunk = " ".join([c.page_content for c in selected_chunks[i:i+chunks_per_question]])
