@@ -25,3 +25,4 @@
 - Corrected answer checking logic in exam mode
 - Modified scoring system to handle unanswered questions as incorrect
 - Adjusted pass/fail threshold to 18/30
+- Modified question generation to focus on content and concepts, avoiding bibliographic details
