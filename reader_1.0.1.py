@@ -1,3 +1,4 @@
+# Import necessary libraries
 import os
 import sys
 import time
@@ -14,17 +15,18 @@ from langchain.prompts import PromptTemplate
 class ChatInterface(QWidget):
     def __init__(self):
         super().__init__()
-        self.llm = None
-        self.db = None
-        self.all_chunks = []
-        self.pdf_count = 0
-        self.current_exam_question = 0
-        self.exam_questions = []
-        self.wrong_answers = []
-        self.api_key = self.get_api_key()
-        self.initUI()
+        self.llm = None  # Language model
+        self.db = None  # Vector database
+        self.all_chunks = []  # All text chunks from PDFs
+        self.pdf_count = 0  # Number of PDFs processed
+        self.current_exam_question = 0  # Current question in exam simulation
+        self.exam_questions = []  # List of exam questions
+        self.wrong_answers = []  # List of wrong answers in exam simulation
+        self.api_key = self.get_api_key()  # Get OpenAI API key from user
+        self.initUI()  # Initialize the user interface
 
     def get_api_key(self):
+        # Prompt user for OpenAI API key
         api_key, ok = QInputDialog.getText(self, 'OpenAI API Key', 'Enter your OpenAI API key:')
         if ok and api_key:
             os.environ['OPENAI_API_KEY'] = api_key
@@ -34,16 +36,20 @@ class ChatInterface(QWidget):
             sys.exit()
 
     def initUI(self):
+        # Set up the main layout
         layout = QVBoxLayout()
 
+        # Add button to select PDF directory
         self.select_dir_button = QPushButton('Select Directory')
         self.select_dir_button.clicked.connect(self.select_directory)
         layout.addWidget(self.select_dir_button)
 
+        # Add text area for chat display
         self.chat_area = QTextEdit()
         self.chat_area.setReadOnly(True)
         layout.addWidget(self.chat_area)
 
+        # Add input field and button for questions
         input_layout = QHBoxLayout()
         self.question_input = QLineEdit()
         self.question_input.setPlaceholderText("Enter your question here")
@@ -56,16 +62,19 @@ class ChatInterface(QWidget):
 
         layout.addLayout(input_layout)
 
+        # Set the main layout and window properties
         self.setLayout(layout)
         self.setWindowTitle('PDF Chat')
         self.setGeometry(300, 300, 600, 400)
 
     def select_directory(self):
+        # Open file dialog to select directory with PDFs
         directory = QFileDialog.getExistingDirectory(self, "Select Directory")
         if directory:
             self.process_directory(directory)
 
     def process_directory(self, directory):
+        # Process all PDFs in the selected directory
         self.chat_area.append(f"Processing directory: {directory}")
         QApplication.processEvents()
 
@@ -78,6 +87,7 @@ class ChatInterface(QWidget):
         self.chat_area.append(f"Found {self.pdf_count} PDF files.")
         QApplication.processEvents()
 
+        # Load and process each PDF
         documents = []
         for pdf_file in pdf_files:
             self.chat_area.append(f"Processing file: {pdf_file}")
@@ -85,11 +95,13 @@ class ChatInterface(QWidget):
             loader = PyPDFLoader(pdf_file)
             documents.extend(loader.load())
 
+        # Split documents into chunks
         self.chat_area.append("Splitting text into chunks...")
         QApplication.processEvents()
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         self.all_chunks = text_splitter.split_documents(documents)
 
+        # Create embeddings and search index
         self.chat_area.append("Creating embeddings...")
         QApplication.processEvents()
         embeddings = OpenAIEmbeddings()
@@ -98,6 +110,7 @@ class ChatInterface(QWidget):
         QApplication.processEvents()
         self.db = FAISS.from_documents(self.all_chunks, embeddings)
 
+        # Initialize language model
         self.chat_area.append("Initializing language model...")
         QApplication.processEvents()
         self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.2)
@@ -108,6 +121,7 @@ class ChatInterface(QWidget):
         self.ask_button.setEnabled(True)
 
     def find_pdf_files(self, directory):
+        # Find all PDF files in the given directory and its subdirectories
         pdf_files = []
         for root, dirs, files in os.walk(directory):
             for file in files:
@@ -116,6 +130,7 @@ class ChatInterface(QWidget):
         return pdf_files
 
     def ask_question(self):
+        # Handle user questions or start exam simulation
         if not self.llm or not self.db:
             self.chat_area.append("Please select a directory with PDF files first.")
             return
@@ -143,6 +158,7 @@ class ChatInterface(QWidget):
             self.question_input.clear()
 
     def generate_exam_simulation(self):
+        # Generate exam simulation questions
         num_questions = 30
         chunks_per_question = 2
         selected_chunks = random.sample(self.all_chunks, min(num_questions * chunks_per_question, len(self.all_chunks)))
@@ -181,6 +197,7 @@ class ChatInterface(QWidget):
         self.show_next_exam_question()
 
     def show_next_exam_question(self):
+        # Display the next exam question or end the simulation
         if self.current_exam_question < len(self.exam_questions):
             question = self.exam_questions[self.current_exam_question]
             self.chat_area.append(f"\nQuestion {self.current_exam_question + 1} of {len(self.exam_questions)}:")
@@ -197,6 +214,7 @@ class ChatInterface(QWidget):
             self.reset_exam()
 
     def check_exam_answer(self):
+        # Check the user's answer to the current exam question
         answer = self.question_input.text().lower().strip()
         if answer == 'exit':
             self.chat_area.append("Ending exam simulation early.")
@@ -227,6 +245,7 @@ class ChatInterface(QWidget):
         self.question_input.clear()
 
     def mark_question_as_wrong(self, user_answer):
+        # Mark the current question as wrong and store it
         current_question = self.exam_questions[self.current_exam_question]
         correct_answer = ''
         for line in current_question.split('\n'):
@@ -236,10 +255,12 @@ class ChatInterface(QWidget):
         self.wrong_answers.append((self.current_exam_question, current_question, user_answer, correct_answer))
 
     def mark_remaining_questions_as_wrong(self):
+        # Mark all remaining questions as wrong if exam ends early
         for i in range(self.current_exam_question, len(self.exam_questions)):
             self.mark_question_as_wrong("No answer provided")
 
     def reset_exam(self):
+        # End the exam simulation and display results
         self.chat_area.append("\nExam simulation completed!")
         if self.wrong_answers:
             self.chat_area.append("\nWrong answers:")
@@ -256,6 +277,7 @@ class ChatInterface(QWidget):
         self.chat_area.append(f"Correct answers: {correct_answers}")
         self.chat_area.append(f"Wrong answers: {len(self.wrong_answers)}")
         
+        # Calculate and display final score
         if total_questions > 0:
             vote = round((correct_answers / total_questions) * 30)
             vote = max(1, min(30, vote))  # Ensure vote is between 1 and 30
@@ -270,6 +292,7 @@ class ChatInterface(QWidget):
             
             self.chat_area.append(f"Exam result: {result}")
         
+        # Reset exam-related variables
         self.current_exam_question = 0
         self.exam_questions = []
         self.wrong_answers = []
@@ -280,6 +303,7 @@ class ChatInterface(QWidget):
         self.question_input.returnPressed.connect(self.ask_question)
 
     def answer_question(self, query):
+        # Answer a general question based on the PDF content
         docs = self.db.similarity_search(query, k=4)
         context = " ".join([doc.page_content for doc in docs])
 
@@ -300,6 +324,7 @@ class ChatInterface(QWidget):
         self.chat_area.append(f"Answer: {result}")
         self.chat_area.append(f"Sources: {[doc.metadata.get('source', 'Unknown') for doc in docs]}")
 
+# Main application entry point
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     chat_interface = ChatInterface()
