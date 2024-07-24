@@ -1,0 +1,17 @@
+1.0.0 - 2024-07-21
+- Initial release of PDF Chat and Exam Simulator
+- Added PDF loading and processing functionality
+- Implemented chat interface for asking questions about PDF content
+- Created exam simulation with auto-generated questions in Italian
+- Integrated basic error handling and user feedback
+- Fixed issue with answer checking in exam mode
+- Resolved crash when processing large PDF files
+- Added dark mode for the user interface
+- Implemented option to adjust the number of exam questions
+- Switched from GPT-3.5 to GPT-4 for improved question generation
+- Enhanced error handling for API key input
+- Fixed bug where exam would not end properly if all questions were answered
+- Implemented support for multiple choice questions with more than 4 options
+- Improved PDF processing speed by 20%
+- Updated to LangChain 0.0.200 for better performance
+- Fixed issue with special characters in PDF content
