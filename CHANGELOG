@@ -15,3 +15,13 @@
 - Improved PDF processing speed by 20%
 - Updated to LangChain 0.0.200 for better performance
 - Fixed issue with special characters in PDF content
+
+1.0.1 - 2024-07-24
+- Introduced interactive exam mode with immediate feedback
+- Added exam scoring system with pass/fail criteria
+- Implemented more robust error handling for API key input
+- Improved user interface for exam simulation
+- Fixed issue with API key retrieval
+- Corrected answer checking logic in exam mode
+- Modified scoring system to handle unanswered questions as incorrect
+- Adjusted pass/fail threshold to 18/30
