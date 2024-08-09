@@ -26,3 +26,11 @@
 - Modified scoring system to handle unanswered questions as incorrect
 - Adjusted pass/fail threshold to 18/30
 - Modified question generation to focus on content and concepts, avoiding bibliographic details
+
+1.0.2 - 2024-08-09
+- Enhanced question generation to avoid questions about PDF authors
+- Improved error handling and user feedback during PDF processing
+- Added version number display in the application title and key messages
+- Fixed AttributeError related to 'select_directory' method
+- Fixed AttributeError related to 'ask_question' method
+- Corrected issue where correct answers were not always displayed in exam simulation
